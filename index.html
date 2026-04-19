@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Henrik Axlund — Selected Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #ffd609;
+    --black: #000;
+    --white: #fff;
+    --gray: #888;
+    --border: 1px solid #222;
+    --font-mono: 'Courier New', monospace;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    background: var(--yellow);
+    color: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 2px solid var(--black);
+    z-index: 100;
+  }
+  #topbar-left {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  #topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  #hud-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #hud-status::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--black);
+    display: block;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: flex;
+    height: 100vh;
+    padding-top: 44px;
+  }
+
+  /* ── LEFT PANEL ── */
+  #panel-list {
+    width: 280px;
+    flex-shrink: 0;
+    border-right: var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+
+  #panel-list-header {
+    padding: 16px 20px 12px;
+    border-bottom: var(--border);
+    flex-shrink: 0;
+  }
+  #panel-list-header h2 {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gray);
+    font-weight: 400;
+  }
+  #case-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  #cases-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+  }
+  #cases-list::-webkit-scrollbar { width: 3px; }
+  #cases-list::-webkit-scrollbar-track { background: transparent; }
+  #cases-list::-webkit-scrollbar-thumb { background: #333; }
+
+  .case-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    user-select: none;
+  }
+  .case-item:hover { background: #0d0d0d; }
+  .case-item.active {
+    background: #111;
+    border-left: 2px solid var(--yellow);
+    padding-left: 18px;
+  }
+  .case-num {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--yellow);
+    flex-shrink: 0;
+    width: 28px;
+  }
+  .case-item.active .case-num { color: var(--yellow); }
+  .case-info { flex: 1; min-width: 0; }
+  .case-client {
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.02em;
+  }
+  .case-type {
+    font-size: 10px;
+    color: var(--gray);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Loading / empty states in list */
+  #list-state {
+    padding: 30px 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    letter-spacing: 0.08em;
+  }
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+  }
+
+  /* ── RIGHT PANEL ── */
+  #panel-detail {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #222 transparent;
+    position: relative;
+  }
+  #panel-detail::-webkit-scrollbar { width: 3px; }
+  #panel-detail::-webkit-scrollbar-track { background: transparent; }
+  #panel-detail::-webkit-scrollbar-thumb { background: #222; }
+
+  #detail-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: #333;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  #detail-content {
+    display: none;
+    padding: 40px 48px 60px;
+    max-width: 820px;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* HUD meta strip */
+  #detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .meta-label {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .meta-value {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .meta-sep {
+    width: 1px;
+    height: 28px;
+    background: #222;
+  }
+
+  #detail-title {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  #detail-subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: #aaa;
+    line-height: 1.5;
+    margin-bottom: 36px;
+    max-width: 540px;
+  }
+
+  /* Cover image / placeholder */
+  #detail-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 40px;
+    overflow: hidden;
+    border: var(--border);
+    position: relative;
+    background: #0a0a0a;
+  }
+  #detail-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  #detail-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #333;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: #333;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  #detail-body {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: #ccc;
+    max-width: 600px;
+    white-space: pre-wrap;
+  }
+
+  /* Nav arrows */
+  #detail-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: var(--border);
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray);
+    background: none;
+    border: var(--border);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .nav-btn:hover { color: var(--white); border-color: #555; }
+  .nav-btn:disabled { opacity: 0.2; cursor: default; }
+  .nav-btn:disabled:hover { color: var(--gray); border-color: #222; }
+
+  /* ── MOBILE ── */
+  #back-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 12px 20px;
+    border-bottom: var(--border);
+  }
+  #back-btn svg { width: 12px; height: 12px; }
+
+  @media (max-width: 680px) {
+    #panel-list {
+      position: absolute;
+      top: 44px; left: 0; bottom: 0;
+      width: 100%;
+      z-index: 10;
+      background: var(--black);
+      border-right: none;
+    }
+    #panel-list.hidden { transform: translateX(-100%); }
+
+    #panel-detail {
+      position: absolute;
+      top: 44px; left: 0; right: 0; bottom: 0;
+      background: var(--black);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    #panel-detail.visible { transform: translateX(0); }
+
+    #detail-content { padding: 24px 20px 48px; }
+    #back-btn { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="topbar-left">Henrik Axlund — Selected Work</div>
+  <div id="topbar-right">
+    <span id="hud-date"></span>
+    <span class="meta-sep" style="height:16px;background:#0004"></span>
+    <span id="hud-status">Portfolio</span>
+  </div>
+</div>
+
+<div id="app">
+  <div id="panel-list">
+    <div id="panel-list-header">
+      <h2>Selected Works</h2>
+      <div id="case-count"></div>
+    </div>
+    <div id="cases-list">
+      <div id="list-state" class="loading-dots">Loading</div>
+    </div>
+  </div>
+
+  <div id="panel-detail">
+    <button id="back-btn" onclick="showList()">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8 2L4 6l4 4"/>
+      </svg>
+      All cases
+    </button>
+
+    <div id="detail-empty">Select a case</div>
+
+    <div id="detail-content">
+      <div id="detail-meta"></div>
+      <h1 id="detail-title"></h1>
+      <p id="detail-subtitle"></p>
+      <div id="detail-cover">
+        <img id="detail-cover-img" src="" alt="" style="display:none">
+        <div id="detail-cover-placeholder">No image</div>
+      </div>
+      <div id="detail-body"></div>
+      <div id="detail-nav">
+        <button class="nav-btn" id="btn-prev" onclick="navigate(-1)">← Prev</button>
+        <button class="nav-btn" id="btn-next" onclick="navigate(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── HUD clock ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('hud-date').textContent =
+      now.toISOString().slice(0, 10);
+  }
+  updateClock();
+
+  // ── Supabase fetch helper ──
+  function sbFetch(path) {
+    return fetch(window.SUPABASE_URL + '/rest/v1' + path, {
+      headers: {
+        'apikey': window.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY,
+      }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  // ── State ──
+  var CASES = [];
+  var activeIdx = -1;
+
+  // ── Load data ──
+  async function loadCases() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+      showError('config.js not found — add your Supabase credentials');
+      return;
+    }
+
+    try {
+      var portfolioCases = await sbFetch('/portfolio_cases?order=display_order.asc');
+
+      if (!portfolioCases || portfolioCases.length === 0) {
+        showEmpty();
+        return;
+      }
+
+      var sourceIds = portfolioCases.map(function (pc) { return pc.source_id; });
+      var caseStudies = await sbFetch('/case_studies?id=in.(' + sourceIds.join(',') + ')&select=*');
+
+      var csMap = {};
+      caseStudies.forEach(function (cs) { csMap[cs.id] = cs; });
+
+      CASES = portfolioCases.map(function (pc, i) {
+        var src = csMap[pc.source_id] || {};
+        return {
+          id: String(i + 1).padStart(3, '0'),
+          client: pc.custom_title || src.client || src.title || src.slug || '—',
+          title: pc.custom_title || src.title || src.slug || '—',
+          type: src.services || 'Case Study',
+          year: src.year || (src.created_at || '').slice(0, 4) || '—',
+          desc: pc.custom_subtitle || src.subtitle || '',
+          body: pc.custom_body || src.body_text || '',
+          cover: pc.cover_image || (src.image_urls && src.image_urls[0]) || '',
+          slug: src.slug || '',
+        };
+      });
+
+      renderList();
+      if (CASES.length > 0) selectCase(0);
+
+    } catch (err) {
+      showError('Failed to load cases: ' + err.message);
+    }
+  }
+
+  function showEmpty() {
+    document.getElementById('list-state').textContent = 'No cases published';
+    document.getElementById('list-state').style.display = '';
+    document.getElementById('case-count').textContent = '';
+  }
+
+  function showError(msg) {
+    var el = document.getElementById('list-state');
+    el.textContent = msg;
+    el.style.display = '';
+    el.classList.remove('loading-dots');
+  }
+
+  // ── Render list ──
+  function renderList() {
+    var listEl = document.getElementById('cases-list');
+    listEl.innerHTML = '';
+    document.getElementById('case-count').textContent =
+      CASES.length + (CASES.length === 1 ? ' case' : ' cases');
+
+    CASES.forEach(function (c, i) {
+      var item = document.createElement('div');
+      item.className = 'case-item';
+      item.dataset.idx = i;
+      item.innerHTML =
+        '<span class="case-num">' + c.id + '</span>' +
+        '<div class="case-info">' +
+          '<div class="case-client">' + esc(c.client) + '</div>' +
+          '<div class="case-type">' + esc(c.type) + '</div>' +
+        '</div>';
+      item.addEventListener('click', function () {
+        selectCase(i);
+        // mobile: show detail
+        document.getElementById('panel-list').classList.add('hidden');
+        document.getElementById('panel-detail').classList.add('visible');
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  // ── Select case ──
+  function selectCase(idx) {
+    if (idx < 0 || idx >= CASES.length) return;
+    activeIdx = idx;
+
+    // highlight list item
+    document.querySelectorAll('.case-item').forEach(function (el) {
+      el.classList.toggle('active', Number(el.dataset.idx) === idx);
+    });
+
+    var c = CASES[idx];
+
+    // meta strip
+    var metaEl = document.getElementById('detail-meta');
+    metaEl.innerHTML =
+      metaItem('Index', c.id) +
+      '<div class="meta-sep"></div>' +
+      metaItem('Client', c.client) +
+      '<div class="meta-sep"></div>' +
+      metaItem('Service', c.type) +
+      '<div class="meta-sep"></div>' +
+      metaItem('Year', c.year);
+
+    document.getElementById('detail-title').textContent = c.title;
+    document.getElementById('detail-subtitle').textContent = c.desc;
+    document.getElementById('detail-body').textContent = c.body;
+
+    // cover image
+    var img = document.getElementById('detail-cover-img');
+    var placeholder = document.getElementById('detail-cover-placeholder');
+    if (c.cover) {
+      img.src = c.cover;
+      img.alt = c.title;
+      img.style.display = '';
+      placeholder.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      placeholder.style.display = '';
+    }
+
+    // nav
+    document.getElementById('btn-prev').disabled = idx === 0;
+    document.getElementById('btn-next').disabled = idx === CASES.length - 1;
+
+    // show content
+    document.getElementById('detail-empty').style.display = 'none';
+    document.getElementById('detail-content').style.display = 'block';
+
+    // scroll detail to top
+    document.getElementById('panel-detail').scrollTop = 0;
+  }
+
+  function metaItem(label, value) {
+    return '<div class="meta-item">' +
+      '<span class="meta-label">' + esc(label) + '</span>' +
+      '<span class="meta-value">' + esc(value) + '</span>' +
+      '</div>';
+  }
+
+  // ── Navigate prev/next ──
+  window.navigate = function (dir) {
+    var next = activeIdx + dir;
+    if (next >= 0 && next < CASES.length) selectCase(next);
+  };
+
+  // ── Mobile back button ──
+  window.showList = function () {
+    document.getElementById('panel-list').classList.remove('hidden');
+    document.getElementById('panel-detail').classList.remove('visible');
+  };
+
+  function esc(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  loadCases();
+})();
+</script>
+</body>
+</html>

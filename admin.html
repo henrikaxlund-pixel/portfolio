@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Admin — Henrik Axlund</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #ffd609;
+    --black: #000;
+    --white: #fff;
+    --bg: #f5f5f4;
+    --surface: #fff;
+    --border: #e0e0de;
+    --border-dark: #ccc;
+    --text: #111;
+    --text2: #666;
+    --gray: #888;
+    --font-mono: 'Courier New', monospace;
+    --panel-w: 400px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    background: var(--yellow);
+    color: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 2px solid var(--black);
+    z-index: 200;
+  }
+  #topbar-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  #topbar-right {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: flex;
+    height: 100vh;
+    padding-top: 44px;
+  }
+
+  /* ── LEFT: ALL CASES ── */
+  #panel-all {
+    flex: 1;
+    min-width: 0;
+    border-right: 2px solid var(--black);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #all-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #all-header h2 {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text2);
+    flex-shrink: 0;
+  }
+  #search-input {
+    flex: 1;
+    border: 1px solid var(--border-dark);
+    background: var(--bg);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+  }
+  #search-input:focus { border-color: var(--black); }
+  #source-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text2);
+    flex-shrink: 0;
+  }
+
+  #all-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+  }
+
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .source-row.is-added { opacity: 0.4; }
+  .source-row-info { flex: 1; min-width: 0; }
+  .source-id {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    margin-bottom: 2px;
+  }
+  .source-title {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .source-sub {
+    font-size: 11px;
+    color: var(--text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+  .add-btn {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--black);
+    color: var(--yellow);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .add-btn:hover { opacity: 0.75; }
+  .add-btn:disabled {
+    background: var(--border);
+    color: var(--gray);
+    cursor: default;
+  }
+  .add-btn:disabled:hover { opacity: 1; }
+
+  #all-loading {
+    padding: 24px 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── RIGHT: PORTFOLIO ── */
+  #panel-portfolio {
+    width: var(--panel-w);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  #portfolio-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #portfolio-header h2 {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+  #portfolio-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text2);
+  }
+
+  #portfolio-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+  }
+
+  /* drag-and-drop card */
+  .portfolio-card {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    transition: background 0.1s;
+    cursor: default;
+  }
+  .portfolio-card.drag-over { background: #fffbe6; border-top: 2px solid var(--yellow); }
+  .portfolio-card.dragging { opacity: 0.4; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px 10px 12px;
+    cursor: grab;
+  }
+  .drag-handle {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-shrink: 0;
+    padding: 4px 2px;
+    color: var(--border-dark);
+    cursor: grab;
+  }
+  .drag-handle span {
+    display: block;
+    width: 16px;
+    height: 1px;
+    background: currentColor;
+  }
+  .card-pos {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--yellow);
+    background: var(--black);
+    padding: 2px 5px;
+    flex-shrink: 0;
+  }
+  .card-title {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .remove-btn {
+    flex-shrink: 0;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 4px;
+    transition: color 0.15s;
+  }
+  .remove-btn:hover { color: var(--text); }
+
+  /* expandable edit fields */
+  .card-fields {
+    padding: 0 16px 12px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .field-label {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .field-input,
+  .field-textarea {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    padding: 6px 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+    resize: vertical;
+  }
+  .field-input:focus,
+  .field-textarea:focus { border-color: var(--black); }
+  .field-textarea { min-height: 72px; }
+
+  #portfolio-empty {
+    padding: 30px 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  /* footer */
+  #portfolio-footer {
+    border-top: 2px solid var(--black);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #last-saved {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--gray);
+  }
+  #publish-btn {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--black);
+    color: var(--yellow);
+    border: none;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  #publish-btn:hover { opacity: 0.8; }
+  #publish-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    padding: 10px 20px;
+    border: 1px solid #333;
+    transition: transform 0.25s ease;
+    pointer-events: none;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.error { color: #ff6b6b; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="topbar-title">Portfolio Admin</div>
+  <div id="topbar-right">Henrik Axlund</div>
+</div>
+
+<div id="app">
+
+  <!-- LEFT: ALL CASES -->
+  <div id="panel-all">
+    <div id="all-header">
+      <h2>All Cases</h2>
+      <input id="search-input" type="text" placeholder="Search by title, client, slug…" oninput="filterSources()">
+      <span id="source-count"></span>
+    </div>
+    <div id="all-list">
+      <div id="all-loading">Loading<span class="loading-dots"></span></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PORTFOLIO -->
+  <div id="panel-portfolio">
+    <div id="portfolio-header">
+      <h2>Portfolio</h2>
+      <span id="portfolio-count">0 cases</span>
+    </div>
+    <div id="portfolio-list">
+      <div id="portfolio-empty">No cases added yet.<br>Click + Add from the left.</div>
+    </div>
+    <div id="portfolio-footer">
+      <span id="last-saved">Not saved</span>
+      <button id="publish-btn" onclick="publish()">Publish Changes</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var allSources = [];
+  var portfolioItems = [];
+  var dragSrc = null;
+
+  // ── Supabase fetch helper ──
+  function sbFetch(method, path, body) {
+    var opts = {
+      method: method,
+      headers: {
+        'apikey': window.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + window.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      }
+    };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    return fetch(window.SUPABASE_URL + '/rest/v1' + path, opts).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error(t || 'HTTP ' + r.status); });
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  // ── Init ──
+  async function init() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+      document.getElementById('all-loading').textContent = 'config.js missing — add your Supabase credentials';
+      return;
+    }
+    try {
+      var [sources, pcRows] = await Promise.all([
+        sbFetch('GET', '/case_studies?select=*&order=id.asc'),
+        sbFetch('GET', '/portfolio_cases?order=display_order.asc')
+      ]);
+
+      allSources = sources || [];
+      renderSources(allSources);
+
+      // build portfolio from existing portfolio_cases
+      portfolioItems = (pcRows || []).map(function (pc) {
+        var src = allSources.find(function (s) { return s.id === pc.source_id; }) || {};
+        return {
+          source_id: pc.source_id,
+          custom_title: pc.custom_title || '',
+          custom_subtitle: pc.custom_subtitle || '',
+          custom_body: pc.custom_body || '',
+          cover_image: pc.cover_image || '',
+          _src: src,
+        };
+      });
+      renderPortfolio();
+
+    } catch (err) {
+      document.getElementById('all-loading').textContent = 'Error: ' + err.message;
+    }
+  }
+
+  // ── Render source list ──
+  function renderSources(rows) {
+    var listEl = document.getElementById('all-list');
+    listEl.innerHTML = '';
+    document.getElementById('source-count').textContent = rows.length + ' cases';
+
+    if (rows.length === 0) {
+      listEl.innerHTML = '<div style="padding:20px;font-size:10px;font-family:monospace;color:#888">No cases found</div>';
+      return;
+    }
+
+    var addedIds = new Set(portfolioItems.map(function (p) { return p.source_id; }));
+
+    rows.forEach(function (src) {
+      var added = addedIds.has(src.id);
+      var row = document.createElement('div');
+      row.className = 'source-row' + (added ? ' is-added' : '');
+      row.dataset.id = src.id;
+      row.innerHTML =
+        '<div class="source-row-info">' +
+          '<div class="source-id">ID ' + src.id + ' / ' + esc(src.slug || '') + '</div>' +
+          '<div class="source-title">' + esc(src.title || '—') + '</div>' +
+          '<div class="source-sub">' + esc((src.subtitle || src.client || '').slice(0, 80)) + '</div>' +
+        '</div>' +
+        '<button class="add-btn"' + (added ? ' disabled' : '') + ' data-srcid="' + src.id + '">' +
+          (added ? 'Added' : '+ Add') +
+        '</button>';
+      row.querySelector('.add-btn').addEventListener('click', function () {
+        addToPortfolio(src);
+      });
+      listEl.appendChild(row);
+    });
+  }
+
+  // ── Filter sources ──
+  window.filterSources = function () {
+    var q = document.getElementById('search-input').value.toLowerCase().trim();
+    if (!q) { renderSources(allSources); return; }
+    var filtered = allSources.filter(function (s) {
+      return (s.title || '').toLowerCase().includes(q) ||
+             (s.client || '').toLowerCase().includes(q) ||
+             (s.slug || '').toLowerCase().includes(q);
+    });
+    renderSources(filtered);
+  };
+
+  // ── Add to portfolio ──
+  function addToPortfolio(src) {
+    if (portfolioItems.find(function (p) { return p.source_id === src.id; })) return;
+    portfolioItems.push({
+      source_id: src.id,
+      custom_title: '',
+      custom_subtitle: '',
+      custom_body: '',
+      cover_image: '',
+      _src: src,
+    });
+    renderPortfolio();
+    // re-render source list to reflect added state
+    filterSources();
+  }
+
+  // ── Remove from portfolio ──
+  function removeFromPortfolio(sourceId) {
+    portfolioItems = portfolioItems.filter(function (p) { return p.source_id !== sourceId; });
+    renderPortfolio();
+    filterSources();
+  }
+
+  // ── Render portfolio ──
+  function renderPortfolio() {
+    var listEl = document.getElementById('portfolio-list');
+    var emptyEl = document.getElementById('portfolio-empty');
+    document.getElementById('portfolio-count').textContent =
+      portfolioItems.length + (portfolioItems.length === 1 ? ' case' : ' cases');
+
+    if (portfolioItems.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl.style.display = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.innerHTML = '';
+
+    portfolioItems.forEach(function (item, i) {
+      var src = item._src || {};
+      var card = document.createElement('div');
+      card.className = 'portfolio-card';
+      card.draggable = true;
+      card.dataset.idx = i;
+
+      var displayTitle = item.custom_title || src.title || src.slug || '—';
+
+      card.innerHTML =
+        '<div class="card-header">' +
+          '<div class="drag-handle"><span></span><span></span><span></span></div>' +
+          '<span class="card-pos">' + String(i + 1).padStart(2, '0') + '</span>' +
+          '<span class="card-title">' + esc(displayTitle) + '</span>' +
+          '<button class="remove-btn" title="Remove" data-srcid="' + item.source_id + '">×</button>' +
+        '</div>' +
+        '<div class="card-fields">' +
+          fieldGroup('Custom Title', 'input', 'custom_title', item.custom_title, src.title || src.slug, i) +
+          fieldGroup('Custom Subtitle', 'input', 'custom_subtitle', item.custom_subtitle, src.subtitle, i) +
+          fieldGroup('Body Text', 'textarea', 'custom_body', item.custom_body, src.body_text, i) +
+          fieldGroup('Cover Image URL', 'input', 'cover_image', item.cover_image,
+            (src.image_urls && src.image_urls[0]) || '', i) +
+        '</div>';
+
+      card.querySelector('.remove-btn').addEventListener('click', function () {
+        removeFromPortfolio(item.source_id);
+      });
+
+      // field inputs
+      card.querySelectorAll('[data-field]').forEach(function (el) {
+        el.addEventListener('input', function () {
+          var idx2 = Number(el.dataset.idx);
+          var field = el.dataset.field;
+          portfolioItems[idx2][field] = el.value;
+          // update title display live
+          if (field === 'custom_title') {
+            var t = el.value || portfolioItems[idx2]._src.title || '—';
+            card.querySelector('.card-title').textContent = t;
+          }
+        });
+      });
+
+      // drag-and-drop
+      card.addEventListener('dragstart', function (e) {
+        dragSrc = i;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', function () {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.portfolio-card').forEach(function (c) {
+          c.classList.remove('drag-over');
+        });
+      });
+      card.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        card.classList.add('drag-over');
+      });
+      card.addEventListener('dragleave', function () {
+        card.classList.remove('drag-over');
+      });
+      card.addEventListener('drop', function (e) {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        var targetIdx = Number(card.dataset.idx);
+        if (dragSrc === null || dragSrc === targetIdx) return;
+        var moved = portfolioItems.splice(dragSrc, 1)[0];
+        portfolioItems.splice(targetIdx, 0, moved);
+        dragSrc = null;
+        renderPortfolio();
+      });
+
+      listEl.appendChild(card);
+    });
+  }
+
+  function fieldGroup(label, type, field, value, placeholder, idx) {
+    var ph = placeholder ? 'placeholder="' + esc(placeholder).slice(0, 60) + '"' : '';
+    if (type === 'textarea') {
+      return '<div class="field-group">' +
+        '<span class="field-label">' + label + '</span>' +
+        '<textarea class="field-textarea" data-field="' + field + '" data-idx="' + idx + '" ' + ph + '>' +
+        esc(value || '') + '</textarea>' +
+        '</div>';
+    }
+    return '<div class="field-group">' +
+      '<span class="field-label">' + label + '</span>' +
+      '<input class="field-input" type="text" data-field="' + field + '" data-idx="' + idx + '" ' +
+      'value="' + esc(value || '') + '" ' + ph + '>' +
+      '</div>';
+  }
+
+  // ── Publish ──
+  window.publish = async function () {
+    var btn = document.getElementById('publish-btn');
+    btn.disabled = true;
+    btn.textContent = 'Publishing…';
+
+    try {
+      // 1. Delete all existing rows
+      await sbFetch('DELETE', '/portfolio_cases?id=gte.0');
+
+      // 2. Insert new rows
+      if (portfolioItems.length > 0) {
+        var rows = portfolioItems.map(function (item, i) {
+          return {
+            source_id: item.source_id,
+            display_order: i,
+            custom_title: item.custom_title || null,
+            custom_subtitle: item.custom_subtitle || null,
+            custom_body: item.custom_body || null,
+            cover_image: item.cover_image || null,
+          };
+        });
+        await sbFetch('POST', '/portfolio_cases', rows);
+      }
+
+      var now = new Date();
+      var timeStr = now.toTimeString().slice(0, 5);
+      document.getElementById('last-saved').textContent = 'Saved ' + timeStr;
+      toast('Published successfully', false);
+
+    } catch (err) {
+      toast('Error: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Publish Changes';
+    }
+  };
+
+  // ── Toast ──
+  function toast(msg, isError) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show' + (isError ? ' error' : '');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function () { el.className = ''; }, 3000);
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
