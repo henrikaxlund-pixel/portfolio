@@ -1,0 +1,2 @@
+window.SUPABASE_URL = 'https://bvkfswhojbaydnqfycmp.supabase.co';
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2a2Zzd2hvamJheWRucWZ5Y21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjA0NTcsImV4cCI6MjA5MTkzNjQ1N30.VyTc-jNNUAa-6TJaCS-8_LA7_jYqOyR7FieOR_WKM24';
